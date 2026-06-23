@@ -2,10 +2,12 @@ using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Ambev.DeveloperEvaluation.WebApi.Common;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CancelSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSales;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.CancelSale;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSales;
@@ -99,6 +101,24 @@ public class SalesController : BaseController
         {
             Id = result.Id,
             SaleNumber = result.SaleNumber,
+            TotalAmount = result.TotalAmount,
+            UpdatedAt = result.UpdatedAt
+        });
+    }
+
+    [HttpPatch("{id}/cancel")]
+    [ProducesResponseType(typeof(ApiResponseWithData<CancelSaleResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CancelSale([FromRoute] Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new CancelSaleCommand { Id = id }, cancellationToken);
+
+        return Ok(new CancelSaleResponse
+        {
+            Id = result.Id,
+            SaleNumber = result.SaleNumber,
+            IsCancelled = result.IsCancelled,
             TotalAmount = result.TotalAmount,
             UpdatedAt = result.UpdatedAt
         });

@@ -29,6 +29,10 @@ namespace Ambev.DeveloperEvaluation.WebApi.Middleware
             {
                 await HandleDomainExceptionAsync(context, ex);
             }
+            catch (KeyNotFoundException ex)
+            {
+                await HandleKeyNotFoundExceptionAsync(context, ex);
+            }
         }
 
         private static Task HandleValidationExceptionAsync(HttpContext context, ValidationException exception)
@@ -64,10 +68,21 @@ namespace Ambev.DeveloperEvaluation.WebApi.Middleware
             return WriteResponseAsync(context, response);
         }
 
-        private static Task WriteResponseAsync(HttpContext context, ApiResponse response)
+        private static Task HandleKeyNotFoundExceptionAsync(HttpContext context, KeyNotFoundException exception)
+        {
+            var response = new ApiResponse
+            {
+                Success = false,
+                Message = exception.Message
+            };
+
+            return WriteResponseAsync(context, response, StatusCodes.Status404NotFound);
+        }
+
+        private static Task WriteResponseAsync(HttpContext context, ApiResponse response, int statusCode = StatusCodes.Status400BadRequest)
         {
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            context.Response.StatusCode = statusCode;
 
             var jsonOptions = new JsonSerializerOptions
             {
