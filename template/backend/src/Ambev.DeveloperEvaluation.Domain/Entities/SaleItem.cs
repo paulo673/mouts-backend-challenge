@@ -52,6 +52,11 @@ public class SaleItem : BaseEntity
         ApplyDiscountRules();
     }
 
+    public void Cancel()
+    {
+        IsCancelled = true;
+    }
+
     private void ApplyDiscountRules()
     {
         if (Quantity > 20)
