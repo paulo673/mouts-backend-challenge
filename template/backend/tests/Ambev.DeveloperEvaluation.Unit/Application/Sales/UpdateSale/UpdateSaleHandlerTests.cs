@@ -216,6 +216,24 @@ public class UpdateSaleHandlerTests
         await _saleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>());
     }
 
+    [Fact(DisplayName = "Given cancelled sale When updating sale Then throws domain exception")]
+    public async Task Handle_CancelledSale_ThrowsDomainException()
+    {
+        var command = UpdateSaleHandlerTestData.GenerateValidCommand();
+        var cancelledSale = UpdateSaleHandlerTestData.GenerateExistingSale();
+        cancelledSale.Cancel();
+
+        _saleRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
+            .Returns(cancelledSale);
+
+        var act = () => _handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<DomainException>()
+            .WithMessage("Cancelled sale cannot be modified.");
+        await _saleRepository.DidNotReceive().UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>());
+        await _publisher.DidNotReceive().Publish(Arg.Any<SaleModifiedNotification>(), Arg.Any<CancellationToken>());
+    }
+
     [Theory(DisplayName = "Given quantity thresholds When updating sale Then discount tier is applied correctly")]
     [InlineData(3, 30)]
     [InlineData(4, 36)]
