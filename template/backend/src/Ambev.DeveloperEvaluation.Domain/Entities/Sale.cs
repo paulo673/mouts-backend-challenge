@@ -41,6 +41,7 @@ public class Sale : BaseEntity
         Guid branchId,
         string branchName)
     {
+        EnsureNotCancelled();
         SetHeader(saleNumber, saleDate, customerId, customerName, branchId, branchName);
         Items.Clear();
         RecalculateTotalAmount();
@@ -80,6 +81,7 @@ public class Sale : BaseEntity
 
     public void AddItem(Guid productId, string productName, int quantity, decimal unitPrice)
     {
+        EnsureNotCancelled();
         var existingItem = Items.FirstOrDefault(i => i.ProductId == productId && !i.IsCancelled);
         if (existingItem is null)
         {
@@ -94,8 +96,27 @@ public class Sale : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void Cancel()
+    {
+        if (IsCancelled)
+            throw new DomainException("Sale is already cancelled.");
+
+        foreach (var item in Items.Where(i => !i.IsCancelled))
+            item.Cancel();
+
+        IsCancelled = true;
+        RecalculateTotalAmount();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     private void RecalculateTotalAmount()
     {
         TotalAmount = Items.Where(i => !i.IsCancelled).Sum(i => i.TotalAmount);
+    }
+
+    private void EnsureNotCancelled()
+    {
+        if (IsCancelled)
+            throw new DomainException("Cancelled sale cannot be modified.");
     }
 }
