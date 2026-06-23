@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   ambev.developerevaluation.webapi:
     container_name: ambev_developer_evaluation_webapi
@@ -10,13 +8,16 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
+      - ASPNETCORE_HTTPS_PORTS=${ASPNETCORE_HTTPS_PORTS:-}
     ports:
-      - "8080"
-      - "8081"
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      ambev.developerevaluation.database:
+        condition: service_healthy
     volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA:-/tmp}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA:-/tmp}/ASP.NET/Https:/home/app/.aspnet/https:ro
 
   ambev.developerevaluation.database:
     container_name: ambev_developer_evaluation_database
@@ -29,6 +30,11 @@ services:
     ports:
       - "5432"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U developer -d developer_evaluation"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   ambev.developerevaluation.nosql:
     container_name: ambev_developer_evaluation_nosql 
