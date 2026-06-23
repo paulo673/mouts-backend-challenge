@@ -60,6 +60,77 @@ public class SaleTests
             .WithMessage("Sale is already cancelled.");
     }
 
+    [Fact(DisplayName = "Given active sale When cancelling item Then marks item as cancelled")]
+    public void CancelItem_ActiveItem_MarksItemAsCancelled()
+    {
+        var sale = CreateSale();
+        var item = sale.Items[0];
+
+        sale.CancelItem(item.Id);
+
+        item.IsCancelled.Should().BeTrue();
+    }
+
+    [Fact(DisplayName = "Given active sale When cancelling item Then recalculates total amount")]
+    public void CancelItem_ActiveItem_RecalculatesTotalAmount()
+    {
+        var sale = CreateSale();
+        var item = sale.Items[0];
+
+        sale.CancelItem(item.Id);
+
+        sale.TotalAmount.Should().Be(20m);
+    }
+
+    [Fact(DisplayName = "Given active sale When cancelling item Then updates updated at")]
+    public void CancelItem_ActiveItem_UpdatesUpdatedAt()
+    {
+        var sale = CreateSale();
+        var item = sale.Items[0];
+
+        sale.CancelItem(item.Id);
+
+        sale.UpdatedAt.Should().NotBeNull();
+        sale.UpdatedAt.Should().BeOnOrAfter(sale.CreatedAt);
+    }
+
+    [Fact(DisplayName = "Given non-existent item When cancelling item Then throws domain exception")]
+    public void CancelItem_ItemNotFound_ThrowsDomainException()
+    {
+        var sale = CreateSale();
+
+        var act = () => sale.CancelItem(Guid.Parse("55555555-5555-5555-5555-555555555555"));
+
+        act.Should().Throw<DomainException>()
+            .WithMessage("Sale item not found.");
+    }
+
+    [Fact(DisplayName = "Given already cancelled item When cancelling item Then throws domain exception")]
+    public void CancelItem_AlreadyCancelledItem_ThrowsDomainException()
+    {
+        var sale = CreateSale();
+        var item = sale.Items[0];
+        sale.CancelItem(item.Id);
+
+        var act = () => sale.CancelItem(item.Id);
+
+        act.Should().Throw<DomainException>()
+            .WithMessage("Sale item is already cancelled.");
+    }
+
+    [Fact(DisplayName = "Given active sale When cancelling item Then does not alter other items")]
+    public void CancelItem_ActiveItem_DoesNotAlterOtherItems()
+    {
+        var sale = CreateSale();
+        var cancelledItem = sale.Items[0];
+        var remainingItem = sale.Items[1];
+
+        sale.CancelItem(cancelledItem.Id);
+
+        remainingItem.IsCancelled.Should().BeFalse();
+        remainingItem.TotalAmount.Should().Be(20m);
+    }
+
     [Fact(DisplayName = "Given cancelled sale When adding item Then throws domain exception")]
     public void AddItem_CancelledSale_ThrowsDomainException()
     {
@@ -84,6 +155,8 @@ public class SaleTests
 
         sale.AddItem(Guid.Parse("33333333-3333-3333-3333-333333333333"), "Product A", 2, 10m);
         sale.AddItem(Guid.Parse("44444444-4444-4444-4444-444444444444"), "Product B", 1, 20m);
+        sale.Items[0].Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        sale.Items[1].Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
         return sale;
     }
