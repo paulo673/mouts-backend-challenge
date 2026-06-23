@@ -1,5 +1,7 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Auth.AuthenticateUser;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
+using Ambev.DeveloperEvaluation.Application.Sales.GetSales;
 using Ambev.DeveloperEvaluation.Application.Users.CreateUser;
 using Ambev.DeveloperEvaluation.Application.Users.DeleteUser;
 using Ambev.DeveloperEvaluation.Application.Users.GetUser;
@@ -20,5 +22,7 @@ public class ApplicationModuleInitializer : IModuleInitializer
         builder.Services.AddTransient<IValidator<GetUserCommand>, GetUserValidator>();
         builder.Services.AddTransient<IValidator<DeleteUserCommand>, DeleteUserValidator>();
         builder.Services.AddTransient<IValidator<CreateSaleCommand>, CreateSaleCommandValidator>();
+        builder.Services.AddTransient<IValidator<GetSaleQuery>, GetSaleValidator>();
+        builder.Services.AddTransient<IValidator<GetSalesQuery>, GetSalesValidator>();
     }
 }
