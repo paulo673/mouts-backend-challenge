@@ -4,6 +4,7 @@ namespace Ambev.DeveloperEvaluation.Common.Validation;
 
 public class ValidationErrorDetail
 {
+    public string Type { get; init; } = string.Empty;
     public string Error { get; init; } = string.Empty;
     public string Detail { get; init; } = string.Empty;
 
@@ -11,6 +12,7 @@ public class ValidationErrorDetail
     {
         return new ValidationErrorDetail
         {
+            Type = "ValidationError",
             Detail = validationFailure.ErrorMessage,
             Error = validationFailure.ErrorCode
         };

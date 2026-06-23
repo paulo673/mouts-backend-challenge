@@ -53,6 +53,9 @@ public class Program
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             var app = builder.Build();
+
+            ApplyMigrations(app);
+
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
             if (app.Environment.IsDevelopment())
@@ -80,5 +83,61 @@ public class Program
         {
             Log.CloseAndFlush();
         }
+    }
+
+    private static void ApplyMigrations(WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<DefaultContext>();
+
+        WaitForDatabase(context);
+
+        var pendingMigrations = context.Database.GetPendingMigrations().ToList();
+
+        if (pendingMigrations.Count > 0)
+        {
+            Log.Information(
+                "Applying {Count} pending migration(s): {Migrations}",
+                pendingMigrations.Count,
+                string.Join(", ", pendingMigrations));
+
+            context.Database.Migrate();
+        }
+        else
+        {
+            Log.Information("Database schema is up to date. No pending migrations.");
+        }
+
+        var stillPending = context.Database.GetPendingMigrations().ToList();
+        if (stillPending.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Database is not up to date. Pending migrations: {string.Join(", ", stillPending)}");
+        }
+
+        Log.Information("Database migrations validated successfully.");
+    }
+
+    private static void WaitForDatabase(DefaultContext context)
+    {
+        const int maxAttempts = 2;
+        var delay = TimeSpan.FromSeconds(5);
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            if (context.Database.CanConnect())
+            {
+                Log.Information("Database connection established (attempt {Attempt}).", attempt);
+                return;
+            }
+
+            Log.Warning(
+                "Database not ready (attempt {Attempt}/{MaxAttempts}). Retrying in {Delay}s...",
+                attempt, maxAttempts, delay.TotalSeconds);
+            Thread.Sleep(delay);
+        }
+
+        throw new InvalidOperationException(
+            $"Could not connect to the database after {maxAttempts} attempts.");
     }
 }

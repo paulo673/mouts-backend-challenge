@@ -1,4 +1,5 @@
 ﻿using Ambev.DeveloperEvaluation.Common.Validation;
+using Ambev.DeveloperEvaluation.Domain.Exceptions;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using FluentValidation;
 using System.Text.Json;
@@ -24,13 +25,14 @@ namespace Ambev.DeveloperEvaluation.WebApi.Middleware
             {
                 await HandleValidationExceptionAsync(context, ex);
             }
+            catch (DomainException ex)
+            {
+                await HandleDomainExceptionAsync(context, ex);
+            }
         }
 
         private static Task HandleValidationExceptionAsync(HttpContext context, ValidationException exception)
         {
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-
             var response = new ApiResponse
             {
                 Success = false,
@@ -38,6 +40,34 @@ namespace Ambev.DeveloperEvaluation.WebApi.Middleware
                 Errors = exception.Errors
                     .Select(error => (ValidationErrorDetail)error)
             };
+
+            return WriteResponseAsync(context, response);
+        }
+
+        private static Task HandleDomainExceptionAsync(HttpContext context, DomainException exception)
+        {
+            var response = new ApiResponse
+            {
+                Success = false,
+                Message = "Validation Failed",
+                Errors = new[]
+                {
+                    new ValidationErrorDetail
+                    {
+                        Type = "DomainValidation",
+                        Error = "Business rule violation",
+                        Detail = exception.Message
+                    }
+                }
+            };
+
+            return WriteResponseAsync(context, response);
+        }
+
+        private static Task WriteResponseAsync(HttpContext context, ApiResponse response)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
 
             var jsonOptions = new JsonSerializerOptions
             {
