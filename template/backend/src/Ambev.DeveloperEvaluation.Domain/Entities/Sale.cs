@@ -29,6 +29,32 @@ public class Sale : BaseEntity
         Guid branchId,
         string branchName)
     {
+        SetHeader(saleNumber, saleDate, customerId, customerName, branchId, branchName);
+        CreatedAt = DateTime.UtcNow;
+    }
+
+    public void Update(
+        string saleNumber,
+        DateTime saleDate,
+        Guid customerId,
+        string customerName,
+        Guid branchId,
+        string branchName)
+    {
+        SetHeader(saleNumber, saleDate, customerId, customerName, branchId, branchName);
+        Items.Clear();
+        RecalculateTotalAmount();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    private void SetHeader(
+        string saleNumber,
+        DateTime saleDate,
+        Guid customerId,
+        string customerName,
+        Guid branchId,
+        string branchName)
+    {
         if (string.IsNullOrWhiteSpace(saleNumber))
             throw new DomainException("Sale number is required.");
 
@@ -50,7 +76,6 @@ public class Sale : BaseEntity
         CustomerName = customerName.Trim();
         BranchId = branchId;
         BranchName = branchName.Trim();
-        CreatedAt = DateTime.UtcNow;
     }
 
     public void AddItem(Guid productId, string productName, int quantity, decimal unitPrice)
