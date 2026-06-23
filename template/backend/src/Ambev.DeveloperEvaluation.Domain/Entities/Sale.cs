@@ -109,6 +109,19 @@ public class Sale : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void CancelItem(Guid itemId)
+    {
+        EnsureNotCancelled();
+
+        var item = Items.FirstOrDefault(i => i.Id == itemId);
+        if (item is null)
+            throw new DomainException("Sale item not found.");
+
+        item.Cancel();
+        RecalculateTotalAmount();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     private void RecalculateTotalAmount()
     {
         TotalAmount = Items.Where(i => !i.IsCancelled).Sum(i => i.TotalAmount);

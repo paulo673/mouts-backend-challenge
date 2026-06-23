@@ -3,11 +3,13 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CancelSale;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CancelSaleItem;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSales;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.CancelSale;
+using Ambev.DeveloperEvaluation.Application.Sales.CancelSaleItem;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSales;
@@ -122,6 +124,25 @@ public class SalesController : BaseController
             TotalAmount = result.TotalAmount,
             UpdatedAt = result.UpdatedAt
         });
+    }
+
+    [HttpPatch("{saleId}/items/{itemId}/cancel")]
+    [ProducesResponseType(typeof(ApiResponseWithData<CancelSaleItemResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CancelSaleItem([FromRoute] Guid saleId, [FromRoute] Guid itemId, CancellationToken cancellationToken)
+    {
+        var request = new CancelSaleItemRequest
+        {
+            SaleId = saleId,
+            ItemId = itemId
+        };
+
+        var command = _mapper.Map<CancelSaleItemCommand>(request);
+        var result = await _mediator.Send(command, cancellationToken);
+        var response = _mapper.Map<CancelSaleItemResponse>(result);
+
+        return Ok(response);
     }
 
     [HttpGet("{id}")]

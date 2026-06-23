@@ -54,6 +54,9 @@ public class SaleItem : BaseEntity
 
     public void Cancel()
     {
+        if (IsCancelled)
+            throw new DomainException("Sale item is already cancelled.");
+
         IsCancelled = true;
     }
 
