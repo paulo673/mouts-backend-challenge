@@ -5,9 +5,11 @@ using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSales;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSales;
+using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales;
 
@@ -60,6 +62,45 @@ public class SalesController : BaseController
                 TotalAmount = result.TotalAmount,
                 CreatedAt = result.CreatedAt
             }
+        });
+    }
+
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(ApiResponseWithData<UpdateSaleResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateSale([FromRoute] Guid id, [FromBody] UpdateSaleRequest request, CancellationToken cancellationToken)
+    {
+        var command = new UpdateSaleCommand
+        {
+            Id = id,
+            SaleNumber = request.SaleNumber,
+            SaleDate = request.SaleDate,
+            CustomerId = request.CustomerId,
+            CustomerName = request.CustomerName,
+            BranchId = request.BranchId,
+            BranchName = request.BranchName,
+            Items = request.Items.Select(item => new UpdateSaleItemDto
+                {
+                    ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice
+                })
+                .ToList()
+        };
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (result is null)
+            return NotFound($"Sale with ID {id} not found");
+
+        return Ok(new UpdateSaleResponse
+        {
+            Id = result.Id,
+            SaleNumber = result.SaleNumber,
+            TotalAmount = result.TotalAmount,
+            UpdatedAt = result.UpdatedAt
         });
     }
 
