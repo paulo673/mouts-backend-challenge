@@ -61,15 +61,19 @@ This section outlines the frameworks and libraries that are leveraged in the pro
 
 See [Frameworks](/.doc/frameworks.md)
 
-<!-- 
+## Running the Application
+This section explains how to run the API with Docker Compose and validate it using a real sale payload taken from the database.
+
+See [Running the Application](/.doc/running-the-application.md)
+
 ## API Structure
 This section includes links to the detailed documentation for the different API resources:
-- [API General](./docs/general-api.md)
+- [API General](/.doc/general-api.md)
 - [Products API](/.doc/products-api.md)
 - [Carts API](/.doc/carts-api.md)
 - [Users API](/.doc/users-api.md)
 - [Auth API](/.doc/auth-api.md)
--->
+- [Sales API](/.doc/sales-api.md)
 
 ## Project Structure
 This section describes the overall structure and organization of the project files and directories. 
